@@ -1,0 +1,6 @@
+@CURSOVA_HostAddress = http://localhost:5077
+
+GET {{CURSOVA_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
