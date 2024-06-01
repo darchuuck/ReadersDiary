@@ -1,21 +1,25 @@
-﻿using CURSOVA.Model;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json;
-using CURSOVA.DataBase;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
-using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Net.Security;
+using System.Text;
+using System.Threading.Tasks;
+using TelegramBook.models;
+using TelegramBook.DataBase;
 
-
-namespace CURSOVA.Clients
+namespace TelegramBook.Clients
 {
-    public class SearchBookClient
+    public class TelegramBookClient
     {
         private readonly string _address;
         private readonly string _apiKey;
         private readonly string _apihost;
         private readonly Data _data;
 
-        public SearchBookClient(Data data)
+        public TelegramBookClient(Data data)
         {
             _address = Constants.Address;
             _apiKey = Constants.ApiKey;
@@ -23,9 +27,9 @@ namespace CURSOVA.Clients
             _data = data;
         }
 
-        public async Task<List<Book>> GetBookByTitle(string title)
+        public async Task<List<BookTel>> GetBookByTitle(string title)
         {
-            
+
             var client = new HttpClient();
             var request = new HttpRequestMessage
             {
@@ -41,12 +45,12 @@ namespace CURSOVA.Clients
             {
                 response.EnsureSuccessStatusCode();
                 var body = await response.Content.ReadAsStringAsync();
-                var result = JsonConvert.DeserializeObject<List<Book>>(body);
+                var result = JsonConvert.DeserializeObject<List<BookTel>>(body);
                 return result;
             }
 
         }
-        public async Task<List<SearchBookRandom>> GetBooksByGenre(string genre)
+        public async Task<List<SearchBookRandomTel>> GetBooksByGenre(string genre)
         {
             var client = new HttpClient();
             var request = new HttpRequestMessage
@@ -63,19 +67,19 @@ namespace CURSOVA.Clients
             {
                 response.EnsureSuccessStatusCode();
                 var body = await response.Content.ReadAsStringAsync();
-                var results = JsonConvert.DeserializeObject<List<SearchBookRandom>>(body);
+                var results = JsonConvert.DeserializeObject<List<SearchBookRandomTel>>(body);
                 return results;
             }
-          
+
 
         }
 
-        public async Task AddBook(Book book, string tableName)
+        public async Task AddBook(BookTel book, string tableName)
         {
             await _data.InsertBooks(book, tableName);
         }
 
-        public async Task<List<Book>> GetBooks(long userId, string tableName)
+        public async Task<List<BookTel>> GetBooks(long userId, string tableName)
         {
             return await _data.SelectBooks(userId, tableName);
         }
@@ -85,6 +89,4 @@ namespace CURSOVA.Clients
             await _data.DeleteBook(title, userId, tableName);
         }
     }
-
-
 }

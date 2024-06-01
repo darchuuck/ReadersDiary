@@ -1,21 +1,25 @@
-﻿using CURSOVA.Model;
-using Microsoft.VisualBasic;
+﻿using TelegramBooksBot.Model;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Json;
+using TelegramBooksBot.DataBase;
+using System;
 using Newtonsoft.Json;
-using CURSOVA.DataBase;
-using System.Net;
-using System.Net.Http.Headers;
 
 
-namespace CURSOVA.Clients
+
+namespace TelegramBooksBot.Clients
 {
-    public class SearchBookClient
+
+    public class TelegramBookClient
     {
         private readonly string _address;
         private readonly string _apiKey;
         private readonly string _apihost;
         private readonly Data _data;
 
-        public SearchBookClient(Data data)
+        public TelegramBookClient(Data data)
         {
             _address = Constants.Address;
             _apiKey = Constants.ApiKey;
@@ -25,7 +29,7 @@ namespace CURSOVA.Clients
 
         public async Task<List<Book>> GetBookByTitle(string title)
         {
-            
+
             var client = new HttpClient();
             var request = new HttpRequestMessage
             {
@@ -66,7 +70,7 @@ namespace CURSOVA.Clients
                 var results = JsonConvert.DeserializeObject<List<SearchBookRandom>>(body);
                 return results;
             }
-          
+
 
         }
 

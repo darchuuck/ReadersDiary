@@ -1,30 +1,30 @@
-﻿using CURSOVA.Clients;
-using CURSOVA.Model;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using ReadingDiary.DataBase;
-using ReadingDiary.Model;
+
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.ReplyMarkups;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using TelegramBook.Clients;
+using TelegramBook.models;
+using TelegramBook.DataBase;
 
-namespace ReadingDiary
+namespace TelegramBook
 {
     public class ProgramForTelegram
 
     {
-        private readonly SearchBookClient _client;
+        private readonly TelegramBookClient _client;
         private Dictionary<long, (string state, string tableName)> _userStates = new Dictionary<long, (string, string)>();
         private readonly string[] _genres;
 
-        public ProgramForTelegram(SearchBookClient client)
+        public ProgramForTelegram(TelegramBookClient client)
         {
             _client = client;
-            _genres = LoadGenresFromFile("Genres.txt");
+            _genres = LoadGenresFromFile("C:\\Users\\dasha\\source\\repos\\CURSOVA\\TelefgramBooksBot\\Genres.txt");
         }
 
         public async Task Start(string token)
@@ -121,7 +121,7 @@ namespace ReadingDiary
         private async Task HandleAddBookCommand(ITelegramBotClient botclient, Message message, string tableName)
         {
             long userId = message.Chat.Id;
-            await botclient.SendTextMessageAsync(message.Chat.Id, "Enter the book in the format name-author-review. If there are several authors, write them separated by a comma; the review is optional.");
+            await botclient.SendTextMessageAsync(message.Chat.Id, "Enter the book in the format name~author~review. If there are several authors, write them separated by a tilda; the review is optional.");
             _userStates[userId] = ("awaiting_book", tableName);
         }
 
@@ -129,7 +129,7 @@ namespace ReadingDiary
         {
             long userId = message.Chat.Id;
 
-            var client = new SearchBookClient(new Data());
+            var client = new TelegramBookClient(new Data());
             var books = await client.GetBooks(userId, tableName);
 
             if (books.Count == 0)
@@ -139,8 +139,7 @@ namespace ReadingDiary
             else
             {
                 var response = "Here are your books:\n";
-                var regex = new Regex("\"([^\"]*?)\"");
-                response += string.Join("\n", books.Select(b => $"{b.Name} - {string.Join(", ", regex.Matches(string.Join(", ", b.Authors)).Cast<Match>().Select(m => m.Groups[1].Value))}\n{b.BookReview}"));
+                response += string.Join("\n", books.Select(b => $"{b.Name} - {string.Join(", ", b.Authors)}\n{b.BookReview ?? "No review"}"));
                 await botclient.SendTextMessageAsync(message.Chat.Id, response);
             }
         }
@@ -166,7 +165,7 @@ namespace ReadingDiary
                 {
                     Random random = new Random();
                     int randomIndex = random.Next(books.Count);
-                    SearchBookRandom randomBook = books[randomIndex];
+                    SearchBookRandomTel randomBook = books[randomIndex];
                     var response = $"Your random book: {randomBook.Name}\nYou can find more information about this book here: {randomBook.Url}\n";
                     await botclient.SendTextMessageAsync(message.Chat.Id, response);
                 }
@@ -229,7 +228,7 @@ namespace ReadingDiary
             }
 
             string tableName = state.tableName;
-            string[] parts = userMessage.Split(new[] { '-' }, 2, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = userMessage.Split(new[] { '~' }, 2, StringSplitOptions.RemoveEmptyEntries);
 
             if (parts.Length < 2)
             {
@@ -241,7 +240,7 @@ namespace ReadingDiary
             string authors = parts[1].Trim();
             string bookReview = parts.Length == 3 ? parts[2].Trim() : null; // Check if a review was provided
             Console.WriteLine($"Title: {title}, Authors: {authors}, Review: {(bookReview == null ? "No review provided" : bookReview)}");
-            var book = new Book
+            var book = new BookTel
             {
                 Name = title,
                 Authors = authors.Split(',').Select(a => a.Trim()).ToList(),
@@ -304,8 +303,15 @@ namespace ReadingDiary
         {
             return new ReplyKeyboardMarkup(new[]
             {
-    new KeyboardButton[] { "/iwantarandombook", "/helpwithgenres", "/findabook", "/addareadbook", "/myreadbooks", "/favoritebooks", "/addafavoritebook", "/removefromfavorites"}
-})
+        new KeyboardButton[] { "/iwantarandombook" },
+        new KeyboardButton[] { "/helpwithgenres" },
+        new KeyboardButton[] { "/findabook" },
+        new KeyboardButton[] { "/addareadbook" },
+        new KeyboardButton[] { "/myreadbooks" },
+        new KeyboardButton[] { "/favoritebooks" },
+        new KeyboardButton[] { "/addafavoritebook" },
+        new KeyboardButton[] { "/removefromfavorites" }
+    })
             {
                 ResizeKeyboard = true,
                 OneTimeKeyboard = true
@@ -319,12 +325,3 @@ namespace ReadingDiary
         }
     }
 }
-
-
-
-
-
-
-
-
-

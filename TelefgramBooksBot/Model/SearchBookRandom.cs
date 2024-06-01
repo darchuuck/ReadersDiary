@@ -1,4 +1,4 @@
-﻿namespace CURSOVA.Model
+﻿namespace TelegramBooksBot.Model
 {
     public class SearchBookRandom
     {

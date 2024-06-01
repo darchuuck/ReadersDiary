@@ -1,10 +1,12 @@
-﻿using CURSOVA;
-using CURSOVA.Model;
-using Microsoft.EntityFrameworkCore;
-using Npgsql;
-using Telegram.Bot.Types;
+﻿using TelegramBooksBot.Model;
 
-namespace CURSOVA.DataBase
+using Npgsql;
+using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace TelegramBooksBot.DataBase
 {
     public class Data
     {
@@ -18,10 +20,16 @@ namespace CURSOVA.DataBase
             NpgsqlCommand comm = new NpgsqlCommand(sql,con);
 
             comm.Parameters.AddWithValue("title", book.Name);
-            comm.Parameters.AddWithValue("authors", string.Join(", ", book.Authors.Select(a => a.Trim('\"', '{', '}'))));
+            comm.Parameters.AddWithValue("authors", book.Authors);
             comm.Parameters.AddWithValue("user_id", book.UserId);
-            comm.Parameters.AddWithValue("book_review", book.BookReview);
-            
+            if (book.BookReview != null)
+            {
+                comm.Parameters.AddWithValue("book_review", book.BookReview);
+            }
+            else
+            {
+                comm.Parameters.AddWithValue("book_review", DBNull.Value);
+            }
             await con.OpenAsync();
             await comm.ExecuteNonQueryAsync(); 
             await con.CloseAsync();
@@ -42,11 +50,10 @@ namespace CURSOVA.DataBase
             {
                 while (await reader.ReadAsync())
                 {
-                    var authors = reader.GetString(1).Split(',').Select(a => a.Trim('\"', '{', '}')).ToList();
                     books.Add(new Book
                     {
                         Name = reader.GetString(0),
-                        Authors = authors,
+                        Authors = reader.GetString(1).Split(',').ToList(),
                         BookReview = reader.IsDBNull(2) ? null : reader.GetString(2),
                         UserId = userId
                     });

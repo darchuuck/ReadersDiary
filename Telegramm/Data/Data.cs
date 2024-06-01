@@ -1,37 +1,45 @@
-﻿using CURSOVA;
-using CURSOVA.Model;
-using Microsoft.EntityFrameworkCore;
-using Npgsql;
-using Telegram.Bot.Types;
+﻿using Npgsql;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Telegramm.models;
 
-namespace CURSOVA.DataBase
+namespace Telegramm.Data
 {
     public class Data
     {
-        NpgsqlConnection con=new NpgsqlConnection(Constants.ConnectionString);
-        
-        public async Task InsertBooks(Book book, string tableName)
+        NpgsqlConnection con = new NpgsqlConnection(Constants.ConnectionString);
+
+        public async Task InsertBooks(BookTel book, string tableName)
         {
             var sql = $"insert into public.\"{tableName}\"(\"user_id\", \"title\", \"authors\", \"book_review\") "
                 + $"values (@user_id, @title, @authors, @book_review)";
 
-            NpgsqlCommand comm = new NpgsqlCommand(sql,con);
+            NpgsqlCommand comm = new NpgsqlCommand(sql, con);
 
             comm.Parameters.AddWithValue("title", book.Name);
-            comm.Parameters.AddWithValue("authors", string.Join(", ", book.Authors.Select(a => a.Trim('\"', '{', '}'))));
+            comm.Parameters.AddWithValue("authors", book.Authors);
             comm.Parameters.AddWithValue("user_id", book.UserId);
-            comm.Parameters.AddWithValue("book_review", book.BookReview);
-            
+            if (book.BookReview != null)
+            {
+                comm.Parameters.AddWithValue("book_review", book.BookReview);
+            }
+            else
+            {
+                comm.Parameters.AddWithValue("book_review", DBNull.Value);
+            }
             await con.OpenAsync();
-            await comm.ExecuteNonQueryAsync(); 
+            await comm.ExecuteNonQueryAsync();
             await con.CloseAsync();
 
         }
 
-        public async Task<List<Book>> SelectBooks(long userId, string tableName)
+        public async Task<List<BookTel>> SelectBooks(long userId, string tableName)
         {
             var sql = $"SELECT \"title\", \"authors\", \"book_review\" FROM public.\"{tableName}\" WHERE \"user_id\" = @user_id";
-            List<Book> books = new List<Book>();
+            List<BookTel> books = new List<BookTel>();
 
             NpgsqlCommand comm = new NpgsqlCommand(sql, con);
             comm.Parameters.AddWithValue("user_id", userId);
@@ -42,11 +50,10 @@ namespace CURSOVA.DataBase
             {
                 while (await reader.ReadAsync())
                 {
-                    var authors = reader.GetString(1).Split(',').Select(a => a.Trim('\"', '{', '}')).ToList();
-                    books.Add(new Book
+                    books.Add(new BookTel
                     {
                         Name = reader.GetString(0),
-                        Authors = authors,
+                        Authors = reader.GetString(1).Split(',').ToList(),
                         BookReview = reader.IsDBNull(2) ? null : reader.GetString(2),
                         UserId = userId
                     });
@@ -71,6 +78,5 @@ namespace CURSOVA.DataBase
                 await con.CloseAsync();
             }
         }
-
     }
 }

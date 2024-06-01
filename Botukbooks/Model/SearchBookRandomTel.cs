@@ -1,6 +1,6 @@
-﻿namespace CURSOVA.Model
+﻿namespace Botukbooks.Model
 {
-    public class SearchBookRandom
+    public class SearchBookRandomTel
     {
         public string Name { get; set; }
         

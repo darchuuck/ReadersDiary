@@ -1,0 +1,6 @@
+@Botukbooks_HostAddress = http://localhost:5215
+
+GET {{Botukbooks_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
