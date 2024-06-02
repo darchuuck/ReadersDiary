@@ -87,7 +87,7 @@ namespace Botukbooks
 
         private async Task HandleStartCommand(Message message)
         {
-            await _botClient.SendTextMessageAsync(message.Chat.Id, "Hello! Here are the available commands:", replyMarkup: GetCommandsKeyboard());
+            await _botClient.SendTextMessageAsync(message.Chat.Id, "Hello! Welcome to the reader bot. You can choose the functions you need in the commands and please pay attention to the instructions I am attaching)", replyMarkup: GetCommandsKeyboard());
         }
 
         private async Task HandleGenreHelpCommand(Message message)

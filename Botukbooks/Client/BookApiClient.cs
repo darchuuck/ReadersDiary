@@ -32,15 +32,15 @@ namespace Botukbooks.Client
             return await response.Content.ReadFromJsonAsync<List<BookTel>>();
         }
 
-        public async Task<BookTel> GetRandomBookByGenreAsync(string genre)
+        public async Task<SearchBookRandomTel> GetRandomBookByGenreAsync(string genre)
         {
             try
             {
-                var response = await _httpClient.GetAsync($"/books/random?genre={genre}");
+                var response = await _httpClient.GetAsync($"/Book/random?genre={genre}");
                 response.EnsureSuccessStatusCode();
 
                 var content = await response.Content.ReadAsStringAsync();
-                var book = JsonConvert.DeserializeObject<BookTel>(content);
+                var book = JsonConvert.DeserializeObject<SearchBookRandomTel>(content);
 
                 return book;
             }
